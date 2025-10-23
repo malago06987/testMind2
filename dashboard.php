@@ -1,9 +1,16 @@
 <?php
 session_start();
+
+// ตรวจสอบการล็อกอิน - บังคับให้ต้องล็อกอินก่อนเข้าถึงหน้านี้
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php");
+    exit;
+}
+
 include 'includes/db.php';
 include 'includes/functions.php';
 
-// ประมวลผลหน้าที่จะแสดง (สำหรับทดสอบ)
+// ประมวลผลหน้าที่จะแสดง
 $page = $_GET['page'] ?? 'dashboard';
 $allowedPages = ['dashboard', 'profile', 'entries', 'analytics'];
 
@@ -11,9 +18,9 @@ if(!in_array($page, $allowedPages)){
     $page = 'dashboard';
 }
 
-// ข้อมูลผู้ใช้สำหรับทดสอบ
-$user_id = $_SESSION['user_id'] ?? 1; // ใช้ ID 1 สำหรับทดสอบ
-$user_name = $_SESSION['user_name'] ?? 'ผู้ทดสอบ'; // ชื่อทดสอบ
+// ดึงข้อมูลผู้ใช้จาก session ที่มีอยู่จริง
+$user_id = $_SESSION['user_id'];
+$user_name = $_SESSION['user_name'];
 ?>
 <!doctype html>
 <html lang="th">

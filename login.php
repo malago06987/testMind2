@@ -38,19 +38,8 @@ if(isset($_POST['login'])){
         if($result->num_rows === 1){
             $user = $result->fetch_assoc();
 
-            // ตรวจสอบรหัสผ่านจากฐานข้อมูล
-            $password_valid = false;
-            
             // ตรวจสอบรหัสผ่านที่เข้ารหัสแล้ว (password_hash)
             if(password_verify($password, $user['password'])){
-                $password_valid = true;
-            }
-            // ตรวจสอบรหัสผ่านแบบธรรมดา (สำหรับข้อมูลเก่า)
-            else if($password === $user['password']){
-                $password_valid = true;
-            }
-            
-            if($password_valid){
                 // อัพเดทเวลาล็อกอินล่าสุด
                 $updateStmt = $conn->prepare("UPDATE users SET last_login = NOW() WHERE id = ?");
                 $updateStmt->bind_param("i", $user['id']);
