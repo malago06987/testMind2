@@ -159,3 +159,59 @@ INSERT INTO reflections (entry_id, reflection_text) VALUES
 (3, 'ความเศร้าที่คุณรู้สึก กำลังสอนอะไรเกี่ยวกับตัวคุณเอง? ถ้าเพื่อนรู้สึกเหมือนคุณ คุณจะให้คำแนะนำอะไรกับเขา?'),
 (4, 'การออกกำลังกายทำให้คุณรู้สึกดี บอกอะไรเกี่ยวกับการดูแลตัวเองของคุณ?'),
 (5, 'การที่วันนี้เป็นวันธรรมดา มีคุณค่าอย่างไรในชีวิตคุณ? ความสงบนี้กำลังเตรียมคุณสำหรับสิ่งใดต่อไป?');
+
+-- --------------------------------------------------
+-- Concept Graph Schema (Concepts, Relations, Entry_Concepts)
+-- Adds: philosophy_quotes.related_concept_id (nullable FK)
+-- Engine: InnoDB | Charset: utf8mb4
+-- --------------------------------------------------
+
+-- ตารางแนวคิดของผู้ใช้
+CREATE TABLE IF NOT EXISTS concepts (
+    concept_id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'รหัสแนวคิด',
+    user_id INT NOT NULL COMMENT 'เจ้าของแนวคิด',
+    concept_name VARCHAR(120) NOT NULL COMMENT 'ชื่อแนวคิด',
+    description TEXT NULL COMMENT 'คำอธิบาย',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'เวลาสร้าง',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'อัปเดตล่าสุด',
+    CONSTRAINT fk_concepts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_concepts_user (user_id),
+    INDEX idx_concepts_user_name (user_id, concept_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='แนวคิดส่วนบุคคลของผู้ใช้';
+
+-- ตารางความสัมพันธ์ระหว่างแนวคิด (มีทิศทาง)
+CREATE TABLE IF NOT EXISTS relations (
+    relation_id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'รหัสความสัมพันธ์',
+    user_id INT NOT NULL COMMENT 'เจ้าของกราฟ',
+    source_concept_id INT NOT NULL COMMENT 'แนวคิดต้นทาง',
+    target_concept_id INT NOT NULL COMMENT 'แนวคิดปลายทาง',
+    relation_type VARCHAR(50) NOT NULL COMMENT 'เช่น related_to, part_of, opposite_of',
+    weight DECIMAL(5,2) NOT NULL DEFAULT 1.00 COMMENT 'น้ำหนักความสำคัญ',
+    frequency INT NOT NULL DEFAULT 0 COMMENT 'จำนวนครั้งที่พบ/ใช้งาน',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'เวลาสร้าง',
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'อัปเดตล่าสุด',
+    CONSTRAINT fk_relations_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_relations_source FOREIGN KEY (source_concept_id) REFERENCES concepts(concept_id) ON DELETE CASCADE,
+    CONSTRAINT fk_relations_target FOREIGN KEY (target_concept_id) REFERENCES concepts(concept_id) ON DELETE CASCADE,
+    INDEX idx_relations_user (user_id),
+    INDEX idx_relations_source (source_concept_id),
+    INDEX idx_relations_target (target_concept_id),
+    INDEX idx_relations_user_source_target (user_id, source_concept_id, target_concept_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='ความสัมพันธ์ระหว่างแนวคิดของผู้ใช้';
+
+-- ตารางเชื่อมโยงบันทึกกับแนวคิด (Composite PK)
+CREATE TABLE IF NOT EXISTS entry_concepts (
+    entry_id INT NOT NULL COMMENT 'บันทึก',
+    concept_id INT NOT NULL COMMENT 'แนวคิด',
+    relevance_score FLOAT DEFAULT 1 COMMENT 'คะแนนความเกี่ยวข้อง',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'เวลาสร้าง',
+    PRIMARY KEY (entry_id, concept_id),
+    CONSTRAINT fk_entry_concepts_entry FOREIGN KEY (entry_id) REFERENCES entries(id) ON DELETE CASCADE,
+    CONSTRAINT fk_entry_concepts_concept FOREIGN KEY (concept_id) REFERENCES concepts(concept_id) ON DELETE CASCADE,
+    INDEX idx_entry_concepts_concept (concept_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='เชื่อมโยงบันทึกกับแนวคิด';
+
+-- เพิ่มคอลัมน์สำหรับเชื่อม quote กับ concept (ถ้ายังไม่มี)
+-- หมายเหตุ: หากรันซ้ำและมีคอลัมน์แล้ว คำสั่งนี้อาจ error ได้ ให้ข้ามได้
+ALTER TABLE philosophy_quotes ADD COLUMN related_concept_id INT NULL AFTER author;
+ALTER TABLE philosophy_quotes ADD CONSTRAINT fk_quotes_concept FOREIGN KEY (related_concept_id) REFERENCES concepts(concept_id) ON DELETE SET NULL;
