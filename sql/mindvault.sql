@@ -142,9 +142,7 @@ GROUP BY u.id, u.name, us.total_entries, us.active_days;
 
 -- ตัวอย่างผู้ใช้ (password: 123456)
 INSERT INTO users (name, email, password, role) VALUES
-('ผู้ใช้ทดสอบ', 'test@mindvault.com', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHeFx7aS8bHeq3/5kn2S6f9sC6FZcGZx2u', 'admin'),
-('สมชาย ใจดี', 'somchai@example.com', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHeFx7aS8bHeq3/5kn2S6f9sC6FZcGZx2u', 'user'),
-('สมหญิง สมใจ', 'somying@example.com', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHeFx7aS8bHeq3/5kn2S6f9sC6FZcGZx2u', 'user');
+('เเอดมิน', 'test@mindvault.com', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHeFx7aS8bHeq3/5kn2S6f9sC6FZcGZx2u', 'admin');
 
 -- ตัวอย่างบันทึก
 INSERT INTO entries (user_id, content, mood) VALUES
